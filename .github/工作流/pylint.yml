@@ -1,0 +1,182 @@
+import streamlit as st
+import time
+import numpy as np
+import pandas as pd
+# 设置网页标题，以及使用宽屏模式
+st.set_page_config(
+    page_title="失物招领系统",
+    layout="wide"
+
+)
+
+# 隐藏右边的菜单以及页脚
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+# 左边导航栏
+sidebar = st.sidebar.radio(
+    "导航栏",
+    ("首页", "失物管理", "用户管理", "权限管理")
+)
+if sidebar == "失物管理":
+    st.title("失物管理")
+    # 项目选择框
+    project_name = st.selectbox(
+        "请选择失物",
+        ["文具", "首饰","电子产品","其他"]
+    )
+    if project_name:
+        # 表单
+        with st.form(project_name):
+            project_info_1 = st.text_input("丢失地点", "Place")
+            project_info_2 = st.text_input("丢失时间", "Time")
+            project_info_3 = st.text_input("形状特征", "Shape")
+            project_info_4 = st.text_input("备注信息", "message")
+            submitted = st.form_submit_button("提交")
+            if submitted:
+                with open('lostiformation.vsc.txt','a') as f:
+                    f.write("\n")
+                    f.write(project_info_1)
+                    f.write(",")
+                    f.write(project_info_2)
+                    f.write(",")
+                    f.write(project_info_3)
+                    f.write(",")
+                    f.write(project_info_4)
+                # 进度条
+                bar = st.progress(0)
+                for i in range(100):
+                    time.sleep(0.01)
+                    bar.progress(i)
+                st.write("丢失地点%s, 丢失时间%s, 丢失特征%s, 备注信息%s," %
+                            (project_info_1, project_info_2, project_info_3,project_info_4))
+                st.success("提交成功")
+
+
+elif sidebar == "用户管理":
+    st.title("用户管理")
+    # 将页面分为左半边和右半边
+    left, right = st.beta_columns(2)
+    # 左半边页面展示部分
+    with left:
+        st.header("查看、更新用户信息")
+        user_name = st.text_input(
+            "请输入用户名",
+            "某某某"
+        )
+        if user_name:
+            with st.form(user_name):
+                phone_num = st.text_input("手机号", "+86")
+                role = st.multiselect(
+                    "用户角色",
+                    ["学生", "老师","管理员"],
+                    ["学生"]
+                )
+                user_group = st.multiselect(
+                    "请选择用户组",
+                    ["vip组", "天使组"],
+                    ["天使组"]
+                )
+                submitted = st.form_submit_button("提交")
+                if submitted:
+                    # 这里添加真实的业务逻辑 
+                    st.write("用户名:%s, 手机号:%s, 用户角色:%s, 用户组:%s" %
+                                (user_name, phone_num, role, user_group))
+                    st.success("提交成功")
+    # 右半边页面展示部分
+    with right:
+        st.header("添加、删除用户")
+        user_action = st.selectbox(
+            "请选择操作",
+            ["添加用户", "删除用户"]
+        )
+        if user_action:
+            with st.form(user_action):
+                if user_action == "添加用户":
+                    phone_num = st.text_input("手机号", "+86")
+                    role = st.multiselect(
+                        "用户角色",
+                        ["学生", "老师"],
+                        ["学生"]
+                    )
+                    user_group = st.multiselect(
+                        "请选择用户组",
+                        ["vip组", "天使组"],
+                        ["vip组"]
+                    )
+                    submitted = st.form_submit_button("提交")
+                    if submitted:
+                        # 请在这里添加真实业务逻辑，或者单独写一个业务逻辑函数
+                        st.write("user_name:%s, phone_num:%s, role:%s, user_group:%s" % (
+                            user_name, phone_num, role, user_group))
+                        st.success("提交成功")
+                else:
+                    user_group = st.multiselect(
+                        "请选择要删除的用户",
+                        ["郑立赛", "乔布斯", "王大拿"]
+                    )
+                    submitted = st.form_submit_button("提交")
+                    if submitted:
+                        # 请在这里添加真实业务逻辑，或者单独写一个业务逻辑函数
+                        st.write("user_name:%s, phone_num:%s, role:%s, user_group:%s" % (
+                            user_name, phone_num, role, user_group))
+                        st.success("提交成功")
+elif sidebar == "权限管理":
+    st.title("权限管理")
+    with st.form("auth"):
+        user = st.multiselect(
+            "选择用户",
+            ["郑立赛", "乔布斯", "王大拿"]
+        )
+        role = st.multiselect(
+            "选择用户角色",
+            ["大神", "大拿"]
+        )
+        user_group = st.multiselect(
+            "请选择用户组",
+            ["大神组", "大拿组"]
+        )
+        submitted = st.form_submit_button("提交")
+        if submitted:
+            # 请在这里添加真实业务逻辑，或者单独写一个业务逻辑函数
+            st.write(
+                "用户:%s, 角色:%s, 用户组:%s" % (user, role, user_group))
+            st.success("提交成功")
+else:
+    st.title("失物招领平台")
+    st.write("您的失物都在我这儿")
+    @st.cache
+    def laod_data():
+        df = pd.read_csv("lostiformation.vsc.txt")
+        df = df[['LOST', 'PLACE', 'TIME', 'SHAPE', 'ANYOTHERS']]
+        df.columns = ['失物', '丢失地点', '丢失时间', '形状特征', '备注消息']
+        return df
+
+
+    df = laod_data()
+    st.table(df.head())
+
+    event_list = df["丢失地点"].unique()
+
+    丢失地点 = st.sidebar.selectbox(
+        "你想查看什么地点",
+        event_list
+    )
+
+    county_list = df["丢失时间"].unique()
+
+    丢失时间 = st.sidebar.selectbox(
+        "什么时间段",
+        county_list
+    )
+
+    part_df = df[(df["丢失地点"] == 丢失地点) & (df['丢失时间'] == 丢失时间)]
+    st.write(f"根据你的筛选，数据包含{len(part_df)}行")
+
+    df = pd.DataFrame(
+        np.random.randn(100,2) / [70,70] + [35.2, -260.7],columns=['lat','lon'])
+    st.map(df)
